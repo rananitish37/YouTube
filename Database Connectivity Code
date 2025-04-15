@@ -1,0 +1,120 @@
+package DB;
+
+import java.sql.*;
+import java.util.Scanner;
+
+public class Connect {
+
+    static final String URL = "jdbc:mysql://localhost:3306/Demo1";
+    static final String USER = "root";
+    static final String PASSWORD = "Codex@1309";
+
+    public static void main(String[] args) throws Exception {
+        Class.forName("com.mysql.cj.jdbc.Driver");
+        Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+        System.out.println("Connection Established");
+
+        Scanner sc = new Scanner(System.in);
+        int choice;
+
+        do {
+            System.out.println("\n--- Employee CRUD Menu ---");
+            System.out.println("1. Insert Employee");
+            System.out.println("2. View All Employees");
+            System.out.println("3. Update Employee Salary");
+            System.out.println("4. Delete Employee");
+            System.out.println("0. Exit");
+            System.out.print("Enter your choice: ");
+            choice = sc.nextInt();
+
+            switch (choice) {
+                case 1:
+                    System.out.print("Enter ID: ");
+                    int id = sc.nextInt();
+                    sc.nextLine(); // consume newline
+                    System.out.print("Enter Name: ");
+                    String name = sc.nextLine();
+                    System.out.print("Enter Position: ");
+                    String position = sc.nextLine();
+                    System.out.print("Enter Salary: ");
+                    double salary = sc.nextDouble();
+
+                    insertEmployee(con, id, name, position, salary);
+                    break;
+
+                case 2:
+                    readEmployees(con);
+                    break;
+
+                case 3:
+                    System.out.print("Enter ID to update: ");
+                    int updateId = sc.nextInt();
+                    System.out.print("Enter new Salary: ");
+                    double newSalary = sc.nextDouble();
+                    updateEmployeeSalary(con, updateId, newSalary);
+                    break;
+
+                case 4:
+                    System.out.print("Enter ID to delete: ");
+                    int deleteId = sc.nextInt();
+                    deleteEmployee(con, deleteId);
+                    break;
+
+                case 0:
+                    System.out.println("Exiting...");
+                    break;
+
+                default:
+                    System.out.println("Invalid choice. Try again.");
+            }
+
+        } while (choice != 0);
+    }
+
+    public static void insertEmployee(Connection con, int id, String name, String position, double salary) throws SQLException {
+        String insertQuery = "INSERT INTO Employee (EmployeeID, Name, Position, Salary) VALUES (?, ?, ?, ?)";
+        PreparedStatement pstmt = con.prepareStatement(insertQuery);
+        pstmt.setInt(1, id);
+        pstmt.setString(2, name);
+        pstmt.setString(3, position);
+        pstmt.setDouble(4, salary);
+
+        int rowsInserted = pstmt.executeUpdate();
+        System.out.println(rowsInserted > 0 ? "Employee inserted successfully!" : "Insertion failed.");
+    }
+
+    public static void readEmployees(Connection con) throws SQLException {
+        String selectQuery = "SELECT * FROM Employee";
+        Statement stmt = con.createStatement();
+        ResultSet rs = stmt.executeQuery(selectQuery);
+
+        System.out.println("\nEmployee Records:");
+        while (rs.next()) {
+            System.out.println(
+                "ID: " + rs.getInt("EmployeeID") +
+                ", Name: " + rs.getString("Name") +
+                ", Position: " + rs.getString("Position") +
+                ", Salary: " + rs.getDouble("Salary")
+            );
+        }
+    }
+
+    public static void updateEmployeeSalary(Connection con, int id, double newSalary) throws SQLException {
+        String updateQuery = "UPDATE Employee SET Salary = ? WHERE EmployeeID = ?";
+        PreparedStatement pstmt = con.prepareStatement(updateQuery);
+        pstmt.setDouble(1, newSalary);
+        pstmt.setInt(2, id);
+
+        int rowsUpdated = pstmt.executeUpdate();
+        System.out.println(rowsUpdated > 0 ? "Salary updated successfully!" : "Employee not found.");
+    }
+
+    public static void deleteEmployee(Connection con, int id) throws SQLException {
+        String deleteQuery = "DELETE FROM Employee WHERE EmployeeID = ?";
+        PreparedStatement pstmt = con.prepareStatement(deleteQuery);
+        pstmt.setInt(1, id);
+
+        int rowsDeleted = pstmt.executeUpdate();
+        System.out.println(rowsDeleted > 0 ? "Employee deleted successfully!" : "Employee not found.");
+    }
+}
